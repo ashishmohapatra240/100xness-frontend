@@ -2,9 +2,19 @@ import axiosInstance from "../lib/axios";
 
 type OrderType = 'long' | 'short';
 
+interface CreateOrderParams {
+    quantity: number;
+    price: number;
+    orderType: OrderType;
+    symbol: string;
+    leverage?: number;
+    stopLoss?: number | null;
+    takeProfit?: number | null;
+}
+
 export const orderService = {
-    createOrder: async (quantity: number, price: number, orderType: OrderType, symbol: string) => {
-        const response = await axiosInstance.post('/orders', { quantity, price, orderType, symbol })
+    createOrder: async (params: CreateOrderParams) => {
+        const response = await axiosInstance.post('/orders', params)
         return response.data;
     },
     getOrders: async () => {
