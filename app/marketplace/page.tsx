@@ -12,7 +12,6 @@ import {
 import { useGetCandles, useGetSymbols } from "../hooks/useCandles";
 import { Candle } from "../types/candle.type";
 import IntervalSelector from "../components/IntervalSelector";
-import { useWs } from "../hooks/useWs";
 
 const Marketplace = () => {
     const containerRef = useRef<HTMLDivElement>(null);
@@ -29,8 +28,7 @@ const Marketplace = () => {
     const { data: symbols, isLoading: symbolsLoading } = useGetSymbols();
 
     const { data, isLoading, isError } = useGetCandles(selectedInterval, startTime, endTime, symbol);
-    const { ws } = useWs();
-
+    
     useEffect(() => {
         if (!containerRef.current) return;
 
@@ -52,8 +50,8 @@ const Marketplace = () => {
         const series = chart.addSeries(CandlestickSeries, {
             upColor: "#00b050",
             downColor: "#ff4976",
-            borderDownColor: "#272727",
-            borderUpColor: "#272727",
+            borderDownColor: "#ff4976",
+            borderUpColor: "#00b050",
             wickDownColor: "#838ca1",
             wickUpColor: "#838ca1",
         });
@@ -67,7 +65,7 @@ const Marketplace = () => {
         ro.observe(containerRef.current);
         resizeObserverRef.current = ro;
 
-        console.log(ws);
+      
 
         return () => {
             ro.disconnect();
@@ -76,7 +74,7 @@ const Marketplace = () => {
             seriesRef.current = null;
         };
       
-    }, [ws]);
+    }, []);
 
     useEffect(() => {
         if (!seriesRef.current || !data || isLoading || isError) return;
