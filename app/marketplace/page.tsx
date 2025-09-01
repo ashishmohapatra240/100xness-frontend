@@ -12,6 +12,7 @@ import {
 import { useGetCandles, useGetSymbols } from "../hooks/useCandles";
 import { Candle } from "../types/candle.type";
 import IntervalSelector from "../components/IntervalSelector";
+import TradingSidebar from "../components/TradingSidebar";
 
 const Marketplace = () => {
     const containerRef = useRef<HTMLDivElement>(null);
@@ -165,20 +166,6 @@ const Marketplace = () => {
                                 <span className="text-sm text-gray-600">Balance:</span>
                                 <span className="text-lg font-semibold text-black font-ibm-plex-mono">${balance.toLocaleString()}</span>
                             </div>
-                            <div className="flex gap-3">
-                                <button className="bg-black text-white border-2 border-black text-sm px-6 py-2 rounded-lg font-medium transition-colors hover:bg-black focus:outline-none focus:ring-2 focus:ring-black cursor-pointer">
-                                    Buy
-                                </button>
-                                <button className="bg-white border-2 border-black text-black text-sm px-6 py-2 rounded-lg font-medium transition-colors hover:bg-black hover:text-white focus:outline-none focus:ring-2 focus:ring-black">
-                                    Sell
-                                </button>
-                            </div>
-                            {/* <Link 
-                                href="/login"
-                                className="bg-white border-2 border-black text-black px-4 py-2 rounded-lg hover:bg-black hover:text-white transition-colors font-instrument-sans font-medium"
-                            >
-                                Login
-                            </Link> */}
                         </div>
                     </div>
 
@@ -233,8 +220,8 @@ const Marketplace = () => {
                                 </div>
 
                                 <div className="flex items-center justify-between">
-                                    <span className="text-sm text-slate-400">Balance:</span>
-                                    <span className="text-lg font-semibold text-white font-ibm-plex-mono">${balance.toLocaleString()}</span>
+                                    <span className="text-sm text-gray-600">Balance:</span>
+                                    <span className="text-lg font-semibold text-black font-ibm-plex-mono">${balance.toLocaleString()}</span>
                                 </div>
 
                                 <div className="flex flex-col gap-2">
@@ -246,13 +233,9 @@ const Marketplace = () => {
                                     />
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-3 pt-2">
-                                    <button className="border-2 border-black text-white bg-black text-sm px-4 py-3 rounded-lg font-medium transition-colors hover:bg-black hover:text-white focus:outline-none">
-                                        Buy
-                                    </button>
-                                    <button className="bg-white border-2 border-black text-black text-sm px-4 py-3 rounded-lg font-medium transition-colors hover:bg-black hover:text-white focus:outline-none">
-                                        Sell
-                                    </button>
+                                {/* Mobile Trading Panel */}
+                                <div className="pt-4 border-t border-gray-200">
+                                    <TradingSidebar symbol={symbol} balance={balance} className="bg-gray-50 rounded-lg" />
                                 </div>
                             </div>
                         </div>
@@ -260,32 +243,40 @@ const Marketplace = () => {
                 </div>
             </header>
 
-            <div className="flex-1 relative overflow-hidden">
-                {isLoading && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-90 z-10">
-                        <div className="text-center">
-                            <div className="text-black text-lg mb-2">Loading chart data...</div>
-                            <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+            <div className="flex flex-1 overflow-hidden">
+                {/* Chart Area */}
+                <div className="flex-1 relative overflow-hidden">
+                    {isLoading && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-90 z-10">
+                            <div className="text-center">
+                                <div className="text-black text-lg mb-2">Loading chart data...</div>
+                                <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+                            </div>
                         </div>
-                    </div>
-                )}
-                {isError && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-90 z-10">
-                        <div className="text-center p-4">
-                            <div className="text-red-600 text-lg mb-2">Error loading chart data</div>
-                            <button
-                                onClick={() => window.location.reload()}
-                                className="bg-white border-2 border-black text-black px-4 py-2 rounded-lg text-sm transition-colors hover:bg-black hover:text-white"
-                            >
-                                Retry
-                            </button>
+                    )}
+                    {isError && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-90 z-10">
+                            <div className="text-center p-4">
+                                <div className="text-red-600 text-lg mb-2">Error loading chart data</div>
+                                <button
+                                    onClick={() => window.location.reload()}
+                                    className="bg-white border-2 border-black text-black px-4 py-2 rounded-lg text-sm transition-colors hover:bg-black hover:text-white"
+                                >
+                                    Retry
+                                </button>
+                            </div>
                         </div>
-                    </div>
-                )}
-                <div
-                    ref={containerRef}
-                    className="w-full h-full min-h-[300px] md:min-h-[400px] lg:min-h-[500px]"
-                />
+                    )}
+                    <div
+                        ref={containerRef}
+                        className="w-full h-full min-h-[300px] md:min-h-[400px] lg:min-h-[500px]"
+                    />
+                </div>
+
+                {/* Trading Sidebar - Hidden on mobile */}
+                <div className="hidden lg:block">
+                    <TradingSidebar symbol={symbol} balance={balance} />
+                </div>
             </div>
         </div>
     );

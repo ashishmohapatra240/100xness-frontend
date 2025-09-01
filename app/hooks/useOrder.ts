@@ -4,20 +4,23 @@ import toast from "react-hot-toast";
 
 type OrderType = 'long' | 'short';
 
+interface CreateOrderParams {
+    quantity: number;
+    price: number;
+    orderType: OrderType;
+    symbol: string;
+    leverage?: number;
+    stopLoss?: number | null;
+    takeProfit?: number | null;
+}
+
 export const useCreateOrder = () => {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: ({ quantity, price, orderType, symbol }: { quantity: number, price: number, orderType: OrderType, symbol: string }) => orderService.createOrder(quantity, price, orderType, symbol),
+        mutationFn: (params: CreateOrderParams) => orderService.createOrder(params),
         onSuccess: (data) => {
-            queryClient.setQueryData(['orders'], data.orders);
             queryClient.invalidateQueries({ queryKey: ['orders'] })
-        },
-        onError: () => {
-            toast.error('Create order failed')
-        },
-        onSettled: () => {
-            toast.success('Create order successful')
         }
     })
 }
@@ -43,13 +46,11 @@ export const useCloseOrder = () => {
     return useMutation({
         mutationFn: (id: string) => orderService.closeOrder(id),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['orders'] })
+            queryClient.invalidateQueries({ queryKey: ['orders'] });
+            toast.success('Order closed successfully');
         },
-        onError: () => {
-            toast.error('Close order failed')
-        },
-        onSettled: () => {
-            toast.success('Close order successful')
+        onError: (error: any) => {
+            toast.error(error?.response?.data?.message || 'Failed to close order');
         }
     })
 }
