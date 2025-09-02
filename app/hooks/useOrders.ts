@@ -8,7 +8,15 @@ export const useCreateOrder = () => {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: ({ quantity, price, orderType, symbol }: { quantity: number, price: number, orderType: OrderType, symbol: string }) => orderService.createOrder(quantity, price, orderType, symbol),
+        mutationFn: ({ quantity, price, orderType, symbol, takeProfit, stopLoss, leverage }: { 
+            quantity: number, 
+            price: number, 
+            orderType: OrderType, 
+            symbol: string,
+            takeProfit?: number,
+            stopLoss?: number,
+            leverage?: number
+        }) => orderService.createOrder(quantity, price, orderType, symbol, takeProfit, stopLoss, leverage),
         onSuccess: (data) => {
             queryClient.setQueryData(['orders'], data.orders);
             queryClient.invalidateQueries({ queryKey: ['orders'] })
@@ -50,22 +58,6 @@ export const useCloseOrder = () => {
         },
         onSettled: () => {
             toast.success('Close order successful')
-        }
-    })
-}
-
-export const useUpdateOrderTPSL = () => {
-    const queryClient = useQueryClient();
-    return useMutation({
-        mutationFn: ({ id, takeProfit, stopLoss }: { id: string, takeProfit: number, stopLoss: number }) => orderService.updateOrderTPSL(id, takeProfit, stopLoss),
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['orders'] })
-        },
-        onError: () => {
-            toast.error('Update order TPSL failed')
-        },
-        onSettled: () => {
-            toast.success('Update order TPSL successful')
         }
     })
 }
