@@ -12,6 +12,9 @@ import {
 import { useGetCandles, useGetSymbols } from "../hooks/useCandles";
 import { Candle } from "../types/candle.type";
 import IntervalSelector from "../components/IntervalSelector";
+import LeftSideBar from "../components/LeftSideBar";
+import RightSideBar from "../components/RightSideBar";
+import OrdersSection from "../components/OrdersSection";
 
 const Marketplace = () => {
     const containerRef = useRef<HTMLDivElement>(null);
@@ -32,48 +35,74 @@ const Marketplace = () => {
     useEffect(() => {
         if (!containerRef.current) return;
 
-        const chart = createChart(containerRef.current, {
-            width: containerRef.current.clientWidth,
-            height: containerRef.current.clientHeight,
-            layout: { background: { color: "#ffffff" }, textColor: "#374151" },
-            crosshair: { mode: CrosshairMode.Normal },
-            grid: {
-                vertLines: { color: "#e5e7eb" },
-                horzLines: { color: "#e5e7eb" },
-            },
-            timeScale: { borderColor: "#d1d5db" },
-            rightPriceScale: { borderColor: "#d1d5db" },
-        });
+        // Add a small delay to ensure container has dimensions
+        const timer = setTimeout(() => {
+            if (!containerRef.current) return;
 
-        chartRef.current = chart;
+            const containerWidth = containerRef.current.clientWidth || 800;
+            const containerHeight = containerRef.current.clientHeight || 400;
 
-        const series = chart.addSeries(CandlestickSeries, {
-            upColor: "#00b050",
-            downColor: "#ff4976",
-            borderDownColor: "#ff4976",
-            borderUpColor: "#00b050",
-            wickDownColor: "#838ca1",
-            wickUpColor: "#838ca1",
-        });
-        seriesRef.current = series;
+            const chart = createChart(containerRef.current, {
+                width: containerWidth,
+                height: containerHeight,
+                layout: { background: { color: "#ffffff" }, textColor: "#374151" },
+                crosshair: { mode: CrosshairMode.Normal },
+                grid: {
+                    vertLines: { color: "#e5e7eb" },
+                    horzLines: { color: "#e5e7eb" },
+                },
+                timeScale: { borderColor: "#d1d5db" },
+                rightPriceScale: { borderColor: "#d1d5db" },
+            });
 
-        const ro = new ResizeObserver(entries => {
-            const { width, height } = entries[0].contentRect;
-            chart.applyOptions({ width, height });
-            chart.timeScale().fitContent();
-        });
-        ro.observe(containerRef.current);
-        resizeObserverRef.current = ro;
+            chartRef.current = chart;
 
-      
+            const series = chart.addSeries(CandlestickSeries, {
+                upColor: "#00b050",
+                downColor: "#ff4976",
+                borderDownColor: "#ff4976",
+                borderUpColor: "#00b050",
+                wickDownColor: "#838ca1",
+                wickUpColor: "#838ca1",
+            });
+            seriesRef.current = series;
+
+            const ro = new ResizeObserver(entries => {
+                if (entries[0]) {
+                    const { width, height } = entries[0].contentRect;
+                    if (width > 0 && height > 0) {
+                        chart.applyOptions({ width, height });
+                        chart.timeScale().fitContent();
+                    }
+                }
+            });
+            ro.observe(containerRef.current);
+            resizeObserverRef.current = ro;
+
+            // Force initial resize after a brief moment
+            setTimeout(() => {
+                if (containerRef.current) {
+                    const newWidth = containerRef.current.clientWidth;
+                    const newHeight = containerRef.current.clientHeight;
+                    if (newWidth > 0 && newHeight > 0) {
+                        chart.applyOptions({ width: newWidth, height: newHeight });
+                        chart.timeScale().fitContent();
+                    }
+                }
+            }, 100);
+        }, 50);
 
         return () => {
-            ro.disconnect();
-            chart.remove();
-            chartRef.current = null;
-            seriesRef.current = null;
+            clearTimeout(timer);
+            if (resizeObserverRef.current) {
+                resizeObserverRef.current.disconnect();
+            }
+            if (chartRef.current) {
+                chartRef.current.remove();
+                chartRef.current = null;
+                seriesRef.current = null;
+            }
         };
-      
     }, []);
 
     useEffect(() => {
@@ -98,7 +127,7 @@ const Marketplace = () => {
     return (
         <div className="w-full h-screen bg-white flex flex-col">
             <header className="bg-white border-b border-gray-200 px-4 py-4 md:px-6 lg:px-8">
-                <div className="max-w-7xl mx-auto">
+                <div className="mx-auto">
                     <div className="flex items-center justify-between mb-4 md:mb-0">
                         <div className="flex items-center gap-4">
                             <div className="w-2 h-2 bg-black rounded-full"></div>
@@ -133,7 +162,7 @@ const Marketplace = () => {
                                 <div className="flex items-center gap-3">
                                     <span className="text-sm text-gray-600">Symbol:</span>
                                     <select
-                                        className="bg-white text-black text-sm px-3 py-2 rounded-lg border border-gray-300 hover:border-gray-400 focus:border-blue-500 focus:outline-none transition-colors"
+                                        className="bg-white text-black text-sm px-3 py-2 rounded-lg border border-gray-300 hover:border-gray-400 transition-colors"
                                         value={symbol}
                                         onChange={(e) => setSymbol(e.target.value)}
                                         disabled={symbolsLoading}
@@ -165,20 +194,9 @@ const Marketplace = () => {
                                 <span className="text-sm text-gray-600">Balance:</span>
                                 <span className="text-lg font-semibold text-black font-ibm-plex-mono">${balance.toLocaleString()}</span>
                             </div>
-                            <div className="flex gap-3">
-                                <button className="bg-black text-white border-2 border-black text-sm px-6 py-2 rounded-lg font-medium transition-colors hover:bg-black focus:outline-none focus:ring-2 focus:ring-black cursor-pointer">
-                                    Buy
-                                </button>
-                                <button className="bg-white border-2 border-black text-black text-sm px-6 py-2 rounded-lg font-medium transition-colors hover:bg-black hover:text-white focus:outline-none focus:ring-2 focus:ring-black">
-                                    Sell
-                                </button>
-                            </div>
-                            {/* <Link 
-                                href="/login"
-                                className="bg-white border-2 border-black text-black px-4 py-2 rounded-lg hover:bg-black hover:text-white transition-colors font-instrument-sans font-medium"
-                            >
-                                Login
-                            </Link> */}
+                            <button className="bg-black text-white text-sm px-6 py-2 rounded-lg font-medium transition-colors hover:bg-gray-800 cursor-pointer">
+                                Deposit
+                            </button>
                         </div>
                     </div>
 
@@ -215,7 +233,7 @@ const Marketplace = () => {
                                 <div className="flex items-center justify-between">
                                     <span className="text-sm text-gray-600">Symbol:</span>
                                     <select
-                                        className="bg-white text-black text-sm px-3 py-2 rounded-lg border border-gray-300 focus:border-blue-500 focus:outline-none transition-colors"
+                                        className="bg-white text-black text-sm px-3 py-2 rounded-lg border border-gray-300 transition-colors"
                                         value={symbol}
                                         onChange={(e) => setSymbol(e.target.value)}
                                         disabled={symbolsLoading}
@@ -246,12 +264,9 @@ const Marketplace = () => {
                                     />
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-3 pt-2">
-                                    <button className="border-2 border-black text-white bg-black text-sm px-4 py-3 rounded-lg font-medium transition-colors hover:bg-black hover:text-white focus:outline-none">
-                                        Buy
-                                    </button>
-                                    <button className="bg-white border-2 border-black text-black text-sm px-4 py-3 rounded-lg font-medium transition-colors hover:bg-black hover:text-white focus:outline-none">
-                                        Sell
+                                <div className="pt-2">
+                                    <button className="w-full bg-black text-white text-sm px-4 py-3 rounded-lg font-medium transition-colors hover:bg-gray-800">
+                                        Deposit
                                     </button>
                                 </div>
                             </div>
@@ -260,32 +275,47 @@ const Marketplace = () => {
                 </div>
             </header>
 
-            <div className="flex-1 relative overflow-hidden">
-                {isLoading && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-90 z-10">
-                        <div className="text-center">
-                            <div className="text-black text-lg mb-2">Loading chart data...</div>
-                            <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
-                        </div>
+            <div className="flex-1 flex overflow-hidden">
+                <LeftSideBar />
+                
+                <div className="flex-1 flex flex-col overflow-hidden">
+                    <div className="flex-1 relative overflow-hidden bg-white">
+                        {isLoading && (
+                            <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-90 z-10">
+                                <div className="text-center">
+                                    <div className="text-black text-lg mb-2">Loading chart data...</div>
+                                    <div className="w-8 h-8 border-4 border-black border-t-transparent rounded-full animate-spin mx-auto"></div>
+                                </div>
+                            </div>
+                        )}
+                        {isError && (
+                            <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-90 z-10">
+                                <div className="text-center p-4">
+                                    <div className="text-red-600 text-lg mb-2">Error loading chart data</div>
+                                    <button
+                                        onClick={() => window.location.reload()}
+                                        className="bg-white border-2 border-black text-black px-4 py-2 rounded-lg text-sm transition-colors hover:bg-black hover:text-white"
+                                    >
+                                        Retry
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                        <div
+                            ref={containerRef}
+                            className="w-full h-full"
+                            style={{ minHeight: '400px' }}
+                        />
                     </div>
-                )}
-                {isError && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-90 z-10">
-                        <div className="text-center p-4">
-                            <div className="text-red-600 text-lg mb-2">Error loading chart data</div>
-                            <button
-                                onClick={() => window.location.reload()}
-                                className="bg-white border-2 border-black text-black px-4 py-2 rounded-lg text-sm transition-colors hover:bg-black hover:text-white"
-                            >
-                                Retry
-                            </button>
-                        </div>
+
+                    <div className="h-80 flex-shrink-0 border-t border-gray-200">
+                        <OrdersSection />
                     </div>
-                )}
-                <div
-                    ref={containerRef}
-                    className="w-full h-full min-h-[300px] md:min-h-[400px] lg:min-h-[500px]"
-                />
+                </div>
+
+                <div className="hidden lg:block">
+                    <RightSideBar selectedSymbol={symbol} />
+                </div>
             </div>
         </div>
     );
